@@ -49,8 +49,6 @@ func GenerateTokens(email string, userName string, user_type string, uid string)
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	tokenSecret := os.Getenv("JWT_SECRET")
 	refreshSecret := os.Getenv("REFRESH_SECRET")
-	fmt.Println(tokenSecret)
-	fmt.Println(refreshSecret)
 	tokentoReturn, err := token.SignedString([]byte(tokenSecret))
 	if err != nil {
 		log.Panic(err)
@@ -82,5 +80,4 @@ func UpdateAllTokens(signedToken string, signedRefreshToken string, userId primi
 		log.Panic(err)
 		return
 	}
-	fmt.Println("Tokens side is finished")
 }

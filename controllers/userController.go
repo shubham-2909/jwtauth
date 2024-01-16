@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -104,12 +106,7 @@ func Login() gin.HandlerFunc {
 		passwordInvalid, msg := VerifyPassword(*user.Password, *foundUser.Password)
 
 		if !passwordInvalid {
-			fmt.Println("Im going here")
 			c.JSON(http.StatusBadRequest, gin.H{"error": msg})
-			return
-		}
-		if foundUser.Email == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something Went Wrong"})
 			return
 		}
 		uid := foundUser.ID.String()
@@ -122,5 +119,59 @@ func Login() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, foundUser)
+	}
+}
+
+func GetUsers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		limit, err := strconv.Atoi(c.Query("limit"))
+		if err != nil {
+			log.Panic(err)
+		}
+		page, err := strconv.Atoi(c.Query("page"))
+		if err != nil {
+			log.Panic(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		l := int64(limit)
+		p := int64(page)
+		skip := (p*l - l)
+		fOpt := options.FindOptions{Skip: &skip, Limit: &l}
+
+		totalUsers, err := userCollection.CountDocuments(ctx, bson.M{})
+		if err != nil {
+			log.Panic(err)
+		}
+		totalPages := math.Ceil(float64(totalUsers) / float64(limit))
+		cursor, err := userCollection.Find(ctx, bson.M{}, &fOpt)
+		if err != nil {
+			log.Panic(err)
+		}
+		defer cursor.Close(ctx)
+		var users []primitive.M
+		for cursor.Next(ctx) {
+			var user bson.M
+			err := cursor.Decode(&user)
+			if err != nil {
+				log.Panic(err)
+			}
+			users = append(users, user)
+		}
+		c.JSON(http.StatusOK, gin.H{"users": users, "totalPages": totalPages})
+	}
+}
+func GetUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ID := c.Param("id")
+		userId, _ := primitive.ObjectIDFromHex(ID)
+		ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+		defer cancel()
+		var user models.User
+		err := userCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+		if err != nil {
+			log.Panic(err)
+		}
+		c.JSON(http.StatusOK, user)
 	}
 }

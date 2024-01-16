@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -21,11 +20,8 @@ func main() {
 	}
 
 	router := gin.New()
+	router.Use(gin.Logger())
 	routes.AuthRoutes(router)
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello This is My first API Using gin")
-	})
-
+	routes.UserRoutes(router)
 	router.Run(":" + port)
-
 }
