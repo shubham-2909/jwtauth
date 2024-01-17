@@ -81,3 +81,37 @@ func UpdateAllTokens(signedToken string, signedRefreshToken string, userId primi
 		return
 	}
 }
+
+func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		msg = err.Error()
+		fmt.Println("Its in line 89 helper")
+		return
+	}
+
+	tokenSecret := os.Getenv("JWT_SECRET")
+	token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(tokenSecret), nil
+	})
+
+	if err != nil {
+		msg = err.Error()
+		fmt.Println("Its in line 99 helper")
+		return
+	}
+
+	claims, ok := token.Claims.(*SignedDetails)
+	if !ok {
+		msg = "Invalid Token"
+		fmt.Println(msg)
+		return
+	}
+
+	if claims.ExpiresAt.Time.Before(time.Now()) {
+		msg = "Token has expired"
+		msg = err.Error()
+	}
+	fmt.Println("Claims are ok")
+	return claims, msg
+}

@@ -124,6 +124,10 @@ func Login() gin.HandlerFunc {
 
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if err := helpers.VerifyUserType(c, "ADMIN"); err != nil {
+			c.JSON(http.StatusUnauthorized, err.Error())
+			return
+		}
 		limit, err := strconv.Atoi(c.Query("limit"))
 		if err != nil {
 			log.Panic(err)
@@ -164,6 +168,10 @@ func GetUsers() gin.HandlerFunc {
 func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ID := c.Param("id")
+		if err := helpers.MapUserTypetoID(c, ID); err != nil {
+			c.JSON(http.StatusUnauthorized, err.Error())
+			return
+		}
 		userId, _ := primitive.ObjectIDFromHex(ID)
 		ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 		defer cancel()
