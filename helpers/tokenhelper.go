@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 	"github.com/shubham-2909/jwtAuth/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,10 +26,10 @@ type SignedDetails struct {
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 
 func GenerateTokens(email string, userName string, user_type string, uid string) (signedToken string, signedRefreshToken string) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Panic(err)
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
 	claims := &SignedDetails{
 		Email:     email,
 		User_type: user_type,
@@ -83,12 +82,12 @@ func UpdateAllTokens(signedToken string, signedRefreshToken string, userId primi
 }
 
 func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		msg = err.Error()
-		fmt.Println("Its in line 89 helper")
-		return
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	msg = err.Error()
+	// 	fmt.Println("Its in line 89 helper")
+	// 	return
+	// }
 
 	tokenSecret := os.Getenv("JWT_SECRET")
 	token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(t *jwt.Token) (interface{}, error) {

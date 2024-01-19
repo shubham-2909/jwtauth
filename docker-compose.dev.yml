@@ -1,0 +1,21 @@
+version: '3'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_URI=mongodb+srv://gandhi_shubham:aditi1703@cluster0.ycgptyb.mongodb.net/?retryWrites=true&w=majority
+      - JWT_SECRET=token_secret
+      - REFRESH_SECRET=refresh_secret
+      - PORT=8000
+    expose:
+      - "8000"
+  nginx:
+    image: nginx
+    ports:
+      - 8080:80
+    depends_on:
+      - server
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Mount a custom nginx configuration file
